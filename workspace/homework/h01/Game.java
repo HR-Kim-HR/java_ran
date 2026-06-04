@@ -52,7 +52,7 @@ public class Game {
                     if (ultimateSkill > 0) {
 
                         int chance = (int) (Math.random() * 2);
-                        enemyDamage = enemyHP;
+                        enemyDamage = enemyHP * chance;
                         enemyHP -= enemyDamage;
                         damage = 0;
                         ultimateSkill--;
