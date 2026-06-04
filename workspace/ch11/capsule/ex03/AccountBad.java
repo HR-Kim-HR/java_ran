@@ -1,5 +1,5 @@
 package ch11.capsule.ex03;
-
+// public 이므로 자유롭게 그대로 사용 가능
 public class AccountBad {
     // 잔고
     public int balance;

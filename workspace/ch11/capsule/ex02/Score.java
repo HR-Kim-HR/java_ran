@@ -46,12 +46,12 @@ public class Score {
         } else {
             this.kor = kor;
         }
-        if(eng > 100 || kor < 0) {
+        if(eng > 100 || eng < 0) {
             System.out.println("eng 값은 0 ~ 100 사이로 입력해야 합니다.");
         } else {
             this.eng = eng;
         }
-        if(math > 100 || kor < 0) {
+        if(math > 100 || math < 0) {
             System.out.println("math 값은 0 ~ 100 사이로 입력해야 합니다.");
         } else {
             this.math = math;

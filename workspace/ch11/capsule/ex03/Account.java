@@ -1,5 +1,5 @@
 package ch11.capsule.ex03;
-
+// private 은 해당 클래스 내에서만 사용 가능, getter 와 setter 로 처리해야 함
 public class Account {
     // 잔고
     private int balance;

@@ -26,6 +26,5 @@ public class ScoreTest {
         System.out.println("하루의 수정된 평균: " + haruAvg);
 
 
-
     }
 }
