@@ -50,7 +50,7 @@ INSERT INTO member (email, password, name, phone, recommender_id, created_at) VA
 INSERT INTO post (member_id, title, content, created_at, view_count) VALUES
     (1, '세 번째 게시글', '오늘도 자바 공부를 열심히 하고 있습니다.', '2026-06-12 13:00:00', 15),
     (2, '자바 복습 방법 질문', '자바를 처음 배우는데 복습은 어떻게 하는게 좋을까요?', '2026-06-12 14:00:00', 5),
-    (3, '자바 OOP 기초 정리', '상속과 다형성에 대한 개념을 정리했습니다.', default, 23),
+    (3, '자바 OOP 기초 정리', '상속과 다형성에 대한 개념을 정리했습니다.', '2026-06-12 15:00:00', 23),
     (4, '가입 인사 올립니다', '하롱이입니다. 반갑습니다.', '2026-06-12 16:00:00', 8),
     (5, '배열과 리스트의 차이', 'ArrayList와 일반 배열의 주요 차이점을 아시는 분 계신가요?', '2026-06-12 17:00:00', 50),
     (1, '네 번째 게시글', '날씨가 흐리네요. 비가 올 것 같습니다.', '2026-06-12 18:00:00', 4),
@@ -67,7 +67,7 @@ INSERT INTO post (member_id, title, content, created_at, view_count) VALUES
     (2, '안녕 테스트 글', '이 본문에는 안녕이라는 단어가 들어갑니다. 반갑습니다.', '2026-06-13 07:00:00', 13),
     (3, '추상 클래스와 인터페이스', '둘 다 추상 메서드를 가지는데 어떤 상황에 구분해서 쓸까요?', '2026-06-13 08:00:00', 25),
     (4, '자바 static 키워드 정리', '클래스 멤버와 인스턴스 멤버의 차이를 정리했습니다.', '2026-06-13 08:15:00', 6),
-    (NULL, '자바 형변환(Casting) 복습', '기본 타입과 참조 타입의 형변환 규칙을 정리해 봅니다.', default, 33);
+    (NULL, '자바 형변환(Casting) 복습', '기본 타입과 참조 타입의 형변환 규칙을 정리해 봅니다.', '2026-06-13 08:30:00', 33);
 
 -- 샘플 댓글 데이터 삽입
 INSERT INTO reply (post_id, member_id, content, created_at) VALUES
@@ -104,27 +104,120 @@ INSERT INTO reply (post_id, member_id, content, created_at) VALUES
 
 
 
--- 사용자 삭제
-drop user if exists 'user1'@'localhost';
+-- 1. 게시글 목록 조회 (작성자 이름, 댓글 수 포함, 최신 등록순 정렬)     // (select-function) concat / 정렬
+-- 작성한지 24시간 이내의 게시글 제목 앞에 (New) 추가
+-- 댓글이 3개 이상 달린 게시글 제목 앞에 (Best) 추가
 
--- 로컬 호스트 전용 계정 생성
-CREATE USER 'user1'@'localhost'
-    IDENTIFIED BY '1111';
+select m.name, p.id,
+concat(
+    case WHEN p.created_at >= DATE_SUB(NOW(), INTERVAL 24 hour) THEN '(new)' else '' end,
+    case when count(r.id)>=3 then '(Best)' else '' end,
+    p.title
+    ) as title,
+p.content as post_content, p.created_at, count(r.id) as reply_count
+from post p
+left join member m on p.member_id = m.id
+left join reply r on p.id = r.post_id
+group by p.id, p.title
+order by created_at desc;
 
--- 개발자용 권한 그룹 생성
-drop role if EXISTS 'developer';
-CREATE ROLE 'developer';
+-- 나의 시도 
+-- select *, date_sub (curdate(), interval 24 hour
+-- from member
+-- where created_at > date_sub(curdate(), interval 24 hour;
 
--- 개발자 그룹에 board_db의 모든 테이블에 대한 CRUD 권한 부여
-GRANT SELECT, INSERT, UPDATE, DELETE ON board_db.* TO 'developer';
-
--- user1에게 개발자 그룹 권한 부여
-GRANT 'developer' TO 'user1'@'localhost';
-
--- user1 로그인 시 developer 권한 그룹이 기본으로 활성화되도록 설정
-SET DEFAULT ROLE 'developer' TO 'user1'@'localhost';
+-- select 
+-- concat('New', date_sub(curdate(), interval 24 hour));
+-- concat('Best', replay.count >=3)
+-- order by created_at desc;
 
 
+-- 2. 게시글 상세 조회 (게시글 제목, 내용, 작성자 이름, 이메일, 댓글 작성자 이름, 댓글 내용 조회)    (select-join) // 댓글 작성자 이름, 댓글 내용 조회 미해결 // count(*) 는 null 값까지 센다. count(r.id) 는 null 값 제외하고 센다.
+
+SELECT A.id AS '게시글 번호', A.title AS '게시글 제목', A.content AS '내용', A.CREATED_AT AS '게시글 작성일', A.name AS '작성자', A.email AS '이메일', 
+	   B.name AS '댓글 작성자', B.content AS '댓글 내용', B.CREATED_AT AS '댓글 작성일'
+FROM(
+	SELECT p.id, p.title, p.content, m.name, m.email, p.CREATED_AT
+	FROM POST p 
+	INNER JOIN MEMBER m -- 게시판 작성자 정보 필요해서 멤버랑 JOIN
+		ON p.MEMBER_ID = m.id
+) A LEFT JOIN (
+	SELECT r.post_id, m.name, r.content, r.CREATED_AT
+	FROM reply r 
+	INNER JOIN MEMBER m -- 댓글작성자 알아야 해서 멤버랑 JOIN
+		ON r.MEMBER_ID = m.id
+) B ON A.id = B.POST_ID
+ORDER BY A.ID ASC;
+
+-- 나의 시도 (결국 댓글 작성자 이름과 댓글 내용 조회는 못 만들었음)
+-- select p.title, p.content, m.name, m.email
+-- from post p
+-- left outer join member as m on p.member_id = m.id;
+
+-- 2번 참고용
+-- LEFT OUTER JOIN
+-- 모든 게시글의 id, member_id, title, view_count, 작성자 이름, 작성자 이메일 칼럼 조회(alias 사용)
+-- SELECT p.id, p.member_id, p.title, p.view_count, m.id, m.name, m.email
+-- FROM post p
+-- left outer join member as m on p.member_id = m.id;
 
 
+-- 3. 게시글 등록 (새로운 게시글 작성) >> 완료 (insert)
+insert into post (member_id, title, content)
+values (3, '좋은 하루입니다!', '날씨가 따뜻해서 서점 갔다가 공원 산책하고 와서 보드게임 했어요! 행복하네요~');
 
+-- 3번 참고용
+-- INSERT INTO post (member_id, title, content)
+-- VALUES (1, '첫 번째 게시글', '안녕하세요. 반갑습니다.');
+
+
+-- 4. 게시글 수정 (2번 게시글의 제목과 내용 변경) >> 완료 (update)
+UPDATE post
+    SET title = '2번 게시글 수정했어요.',
+    content = '수정이 반영된 본문입니다.'
+    WHERE id = 2;
+
+-- 4번 참고용
+-- UPDATE post
+--    SET title = '수정된 첫 번째 게시글',
+--        content = '수정이 반영된 본문입니다.'
+--    WHERE id = 1;
+
+
+-- 5. 게시글 삭제 (3번에서 등록한 새로운 게시글 삭제) >> 완료 (delete)
+DELETE FROM post
+    where id = 21;
+    
+-- 최근 게시물 삭제
+DELETE FROM post
+ORDER BY id DESC
+limit 1;
+
+-- 5번 참고용
+-- select * from member where id = 1; 5번 문제 참고용
+-- DELETE FROM member
+-- WHERE id = 1;
+    
+
+-- 6. 게시글 검색 (제목 또는 내용에 '자바'가 포함된 게시글 조회) >> 완료 (select)
+select * 
+from post
+where title like '%자바%' or content like '%자바%';
+
+
+-- 7. 게시글 페이징 조회 (최신순으로 2페이지 분량의 게시글 10건 조회) >> 완료 (select)
+select *
+from post
+order by created_at desc
+limit 10, 10; -- 시작인덱스 0번째부터... 0, 5 면 0번째부터 5개 출력, 5, 5 면 5번째부터 5개 출력
+
+-- 7번 참고용
+-- 페이징 처리: 한 페이지에 5건씩, 2페이지 조회 (3번째~4번째 행)
+-- SELECT id, title, created_at
+--    FROM post
+--    ORDER BY created_at DESC
+--    LIMIT 2, 5; -- (page-1)*2, 5 이런 원리지만 공식을 직접 쓰는 건 안 됨
+
+
+-- 확인 및 검토용 게시판 조회
+select * from post;
