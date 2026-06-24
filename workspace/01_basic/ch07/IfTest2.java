@@ -9,7 +9,7 @@ public class IfTest2 {
 
         // 복습
 
-        if(month == 4 || month == 6 || month ==9 || month == 11 ) {
+        if(month == 4 || month == 6 || month == 9 || month == 11 ) {
             System.out.println(month + "월의 마지막 날은 30일입니다.");
         } else if (month == 2) {
             System.out.println(month + "월의 마지막 날은 28일입니다.");

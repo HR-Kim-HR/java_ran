@@ -35,7 +35,7 @@ public class SwitchExpressionTest {
             case "월요일", "화요일", "수요일", "목요일", "금요일" -> "평일";
             case "토요일", "일요일" -> "주말" ;
             default -> "잘못된 요일";
-        };
+        } ;
         System.out.println(type);
 
         int score = 90;

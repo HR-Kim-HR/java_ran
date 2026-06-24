@@ -74,3 +74,13 @@ SELECT id, title, created_at
     ORDER BY created_at DESC
     LIMIT 2, 2; -- (2-1)*2, 2 이런 원리지만 공식을 직접 쓰는 건 안 됨
 
+-- 로그인 체크
+SELECT * FROM member WHERE email = 'haru@gmail.com' AND password = '123';
+SELECT * FROM member WHERE email = 'haru@gmail.com' AND password = 'pwd123';
+
+-- SQL Injection 기법
+SELECT * FROM member WHERE email = 'haru@gmail.com' OR '1' = '1' AND password = 'sdfgdfeerer';
+
+SELECT * FROM member WHERE email = 'haru@gmail.com; drop table member; -- ' AND password = '123';
+
+
